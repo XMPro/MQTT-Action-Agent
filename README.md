@@ -1,21 +1,22 @@
-# MQTT-Action-Agent
+# MQTT Action Agent
 
 ## Prerequisites
-- The port on which MQTT is listening should be accessible on the network
-- Visual Studio (any version that supports .Net Core 2.1)
-- [XMPro IoT Framework NuGet package](https://www.nuget.org/packages/XMPro.IOT.Framework/3.0.2-beta)
-- Please see the [Building an Agent for XMPro IoT](https://docs.xmpro.com/lessons/writing-an-agent-for-xmpro-iot/) guide for a better understanding of how the XMPro IoT Framework works
+- The port on which MQTT is listening should be accessible
+- Visual Studio
+- [XMPro IoT Framework NuGet package](https://www.nuget.org/packages/XMPro.IOT.Framework/)
+- Please see the [Manage Agents](https://documentation.xmpro.com/how-tos/manage-agents) guide for a better understanding of how the Agent Framework works
 
 ## Description
-The MQTT action agent posts data to a MQTT channel to which a device might have subscribed for instructions or control commands.
+The *MQTT Action Agent* posts data to a MQTT channel to which a device might have subscribed for instructions or control commands.
 
 ## How the code works
-All settings referred to in the code need to correspond with the settings defined in the template that has been created for the agent using the Stream Integration Manager. Refer to the [Stream Integration Manager](https://docs.xmpro.com/courses/packaging-an-agent-using-stream-integration-manager/) guide for instructions on how to define the settings in the template and package the agent after building the code. 
+All settings referred to in the code need to correspond with the settings defined in the template that has been created for the agent using the XMPro Package Manager. Refer to the [XMPro Package Manager](https://documentation.xmpro.com/agent/packaging-agents/) guide for instructions on how to define the settings in the template and package the agent after building the code. 
 
-After packaging the agent, you can upload it to XMPro IoT and start using it.
+After packaging the agent, you can upload it to the XMPro Data Stream Designer and start using it.
 
 ### Settings
 When a user needs to use the *MQTT Action Agent*, they need to provide a Broker address, and a topic. Retrieve these values from the configuration using the following code: 
+
 ```csharp
 private Configuration config;
 private MqttClient client;
@@ -23,8 +24,9 @@ private string Broker => this.config["Broker"];
 private string Topic => this.IsRemote() ? this.FromId().ToString() : this.config["Topic"];
 ```
 
-### Configurations
+### Configuration
 In the *GetConfigurationTemplate* method, parse the JSON representation of the settings into the Settings object.
+
 ```csharp
 var settings = Settings.Parse(template);
 new Populator(parameters).Populate(settings);
@@ -37,6 +39,7 @@ topic.Visible = topic.Required = !this.IsRemote();
 
 ### Validate
 When validating the stream, an error needs to be shown if either the topic or the broker fields are left empty. Set the config variable to a new Configuration instance and set the parameters to the parameters received in the *Validate* method.
+
 ```csharp
 int i = 1;
 var errors = new List<string>();
@@ -51,6 +54,7 @@ if (String.IsNullOrWhiteSpace(this.Topic))
 
 ### Create
 Set the config variable to the configuration received in the *Create* method.
+
 ```csharp
 this.config = configuration;
 ```
@@ -64,6 +68,7 @@ There is no need to do anything in the *Start* method.
 
 ### Destroy
 Make sure that the MQTT client is disconnected in the *Destroy* method.
+
 ```csharp
 public void Destroy()
 {
@@ -74,11 +79,13 @@ public void Destroy()
 
 ### Publishing Events
 This agent will receive events; thus, the following method has to be implemented:
+
 ```csharp
 void Receive(string endpointName, JArray events)
 ```
 
 In the *Receive* method, make sure that the MQTT client is connected. If not, connect to the client, passing a new unique ID.
+
 ```csharp
 if (this.client.IsConnected == false)
     this.client.Connect(Guid.NewGuid().ToString());
